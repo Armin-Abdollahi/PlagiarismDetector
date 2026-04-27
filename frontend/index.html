@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>سامانه هوشمند تشخیص تقلب علمی - نسخه پیشرفته UI</title>
+
+<!-- Vazirmatn Font -->
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap" rel="stylesheet" />
+<!-- Fontawesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root {
+    /* پالت رنگی مدرن و جذاب */
+    --primary: #4f46e5;         /* Indigo */
+    --primary-light: #818cf8;
+    --primary-dark: #3730a3;
+    --accent: #ec4899;          /* Pink */
+    --accent-light: #f472b6;
+
+    /* پس‌زمینه‌های مش‌گرادیانت (Mesh Gradient) */
+    --bg-color: #f8fafc;
+    --bg-gradient: linear-gradient(-45deg, #eff6ff, #e0e7ff, #fae8ff, #f3e8ff);
+
+    /* افکت‌های شیشه‌ای (Glassmorphism) */
+    --surface: rgba(255, 255, 255, 0.65);
+    --surface-solid: rgba(255, 255, 255, 0.95);
+    --border-glass: rgba(255, 255, 255, 0.8);
+    --border: rgba(203, 213, 225, 0.5);
+
+    /* تایپوگرافی و رنگ متن */
+    --text-main: #0f172a;
+    --text-muted: #475569;
+
+    /* وضعیت‌ها */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #f43f5e;
+
+    /* سایه‌های پیشرفته (Multi-layered Shadows) */
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.02), 0 4px 4px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 10px 30px rgba(79, 70, 229, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 20px 40px rgba(79, 70, 229, 0.12), 0 10px 20px rgba(0, 0, 0, 0.05);
+    --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.3);
+
+    --radius: 24px;
+    --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body.dark {
+    --bg-color: #0b0f19;
+    --bg-gradient: linear-gradient(-45deg, #0b0f19, #171124, #10172a, #0b1120);
+
+    --surface: rgba(15, 23, 42, 0.55);
+    --surface-solid: rgba(30, 41, 59, 0.9);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --border: rgba(51, 65, 85, 0.6);
+
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(79, 70, 229, 0.1);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(236, 72, 153, 0.1);
+    --shadow-glow: 0 0 25px rgba(236, 72, 153, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* اسکرول‌بار نامرئی و شیشه‌ای */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 20px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
+
+  body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: var(--bg-gradient);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    color: var(--text-main);
+    line-height: 1.8;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.6s ease, color 0.6s ease;
+  }
+
+  /* هدر الترا-گلس */
+  header {
+    background: var(--surface);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    padding: 18px 50px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid var(--border-glass);
+  }
+
+  .logo {
+    font-size: 26px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+
+  .logo i {
+    -webkit-text-fill-color: initial;
+    color: var(--primary);
+    font-size: 30px;
+    filter: drop-shadow(0 0 8px rgba(79, 70, 229, 0.5));
+    animation: pulseGlow 2.5s infinite alternate;
+  }
+
+  .dark-toggle {
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--text-muted);
+    background: var(--surface-solid);
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-glass);
+    transition: var(--transition);
+  }
+  .dark-toggle:hover {
+    color: var(--accent);
+    transform: rotate(20deg) scale(1.15);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .main-container {
+    max-width: 1440px;
+    margin: 60px auto;
+    padding: 0 25px 80px;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: slideDownFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .page-title h1 {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--text-main) 30%, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-title p {
+    color: var(--text-muted);
+    font-size: 17px;
+    max-width: 650px;
+    margin: 0 auto;
+    font-weight: 300;
+  }
+
+  /* پنل‌های متن (شیشه‌ای و معلق) */
+  .multi-editor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-bottom: 50px;
+  }
+
+  .text-panel {
+    background: var(--surface);
+    backdrop-filter: blur(16px) saturate(180%);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-glass);
+    flex: 1 1 45%;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+    min-width: 320px;
+    height: 400px;
+    animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* نوار درخشان بالای پنل */
+  .text-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    opacity: 0;
+    transition: var(--transition);
+  }
+
+  .text-panel:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+  }
+  .text-panel:hover::before { opacity: 1; }
+
+  .text-panel:focus-within {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1), var(--shadow-lg);
+    background: var(--surface-solid);
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-weight: 800;
+    color: var(--primary);
+    font-size: 17px;
+    letter-spacing: -0.5px;
+  }
+  .panel-header i { margin-left: 10px; color: var(--accent); font-size: 1.2em; }
+
+  textarea {
+    width: 100%;
+    border: none;
+    resize: none;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--text-main);
+    background: transparent;
+    padding: 15px;
+    border-radius: 16px;
+    flex-grow: 1;
+    transition: var(--transition);
+    font-weight: 400;
+  }
+  textarea:focus { outline: none; background: rgba(0,0,0,0.015); }
+  body.dark textarea:focus { background: rgba(255,255,255,0.02); }
+  textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+  .panel-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border);
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .action-btn-sm {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; transition: var(--transition);
+    display: flex; align-items: center; gap: 8px; font-weight: 600;
+    padding: 6px 12px; border-radius: 8px;
+  }
+  .action-btn-sm:hover {
+    color: var(--danger);
+    background: rgba(244, 63, 94, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* دکمه‌های کنترل */
+  .controls-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    color: var(--primary);
+    padding: 14px 30px;
+    font-weight: 800;
+    font-size: 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border-glass);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+  }
+  .file-input-wrapper input[type=file] {
+    font-size: 100px;
+    position: absolute;
+    left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%;
+  }
+
+  /* دکمه اکشن اصلی (گلو افکت) */
+  .action-section { text-align: center; margin-bottom: 60px; position: relative; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white; border: none; padding: 20px 50px;
+    font-size: 20px; font-weight: 800; border-radius: 50px;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3), 0 0 0 0 rgba(79, 70, 229, 0.5);
+    transition: var(--transition);
+    display: inline-flex; align-items: center; gap: 12px;
+    position: relative; overflow: hidden;
+    z-index: 1;
+  }
+
+  /* افکت موج نورانی روی دکمه */
+  .btn-primary::after {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+    transform: scale(0);
+    transition: transform 0.6s ease-out;
+    z-index: -1;
+  }
+  .btn-primary:hover::after { transform: scale(1); }
+  .btn-primary:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 35px rgba(236, 72, 153, 0.5), 0 0 20px rgba(79, 70, 229, 0.4);
+    letter-spacing: 0.5px;
+  }
+  .btn-primary:disabled { filter: grayscale(1); cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.6;}
+
+  /* اسکنر و لودر مدرن */
+  .loader-container {
+    display: none; flex-direction: column; align-items: center; margin-top: 40px;
+  }
+  .scanner {
+    width: 80px; height: 80px; position: relative;
+    border: 2px solid rgba(79, 70, 229, 0.3); border-radius: 20px; overflow: hidden;
+    background: var(--surface); backdrop-filter: blur(5px);
+    box-shadow: inset 0 0 20px rgba(79, 70, 229, 0.1);
+  }
+  .scanner-line {
+    width: 100%; height: 3px; background: var(--accent);
+    position: absolute; top: 0; left: 0;
+    box-shadow: 0 0 15px 3px var(--accent-light);
+    animation: scanPulse 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  }
+  .loader-text {
+    margin-top: 20px; font-size: 17px; font-weight: 800;
+    background: linear-gradient(to right, var(--primary), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: blinkGlow 1.5s infinite;
+  }
+
+  /* کانتینر نتایج */
+  .result-container {
+    display: none; background: var(--surface); backdrop-filter: blur(25px) saturate(200%);
+    border-radius: calc(var(--radius) * 1.5); padding: 50px;
+    box-shadow: var(--shadow-lg); border: 1px solid var(--border-glass);
+    max-width: 1300px; margin: 0 auto 50px;
+    animation: slideUpFloat 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .result-header { text-align: center; margin-bottom: 40px; }
+  .result-header h2 { font-size: 32px; color: var(--text-main); font-weight: 800; letter-spacing: -1px;}
+
+  /* کارت‌های امتیاز */
+  .scores-box {
+    display: flex; gap: 25px; justify-content: center; margin: 40px 0; flex-wrap: wrap;
+  }
+  .score-item {
+    background: var(--surface-solid); border: 1px solid var(--border-glass);
+    border-radius: var(--radius); padding: 25px 20px; flex: 1; min-width: 200px;
+    text-align: center; box-shadow: var(--shadow-sm);
+    transition: var(--transition); position: relative; overflow: hidden;
+  }
+  .score-item:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+  }
+  .score-label { font-size: 16px; color: var(--text-muted); font-weight: 700; margin-bottom: 12px; display: block;}
+  .score-value { font-size: 42px; font-weight: 800; color: var(--primary); text-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
+
+  .score-item.danger .score-value { color: var(--danger); text-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);}
+  .score-item.danger { border-bottom: 5px solid var(--danger); }
+
+  /* گرید نمودارها */
+  .charts-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 35px; margin-top: 50px;
+  }
+  .chart-card {
+    background: var(--surface-solid); padding: 30px; border-radius: var(--radius);
+    border: 1px solid var(--border-glass); box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  .chart-card:hover { box-shadow: var(--shadow-md); }
+  .chart-card h3 { text-align: center; margin-bottom: 25px; color: var(--text-main); font-size: 18px; font-weight: 800;}
+
+  #radarChartContainer canvas, #similarityGraphContainer canvas { width: 100% !important; max-height: 380px;}
+
+  /* هایلایت‌ها */
+  .highlight-wrapper { margin-top: 50px; }
+  .highlight-wrapper .chart-card { min-height: 300px; }
+  .highlighted {
+    background-color: rgba(244, 63, 94, 0.15); color: var(--danger);
+    border-bottom: 2px solid rgba(244, 63, 94, 0.4); border-radius: 4px; padding: 2px 6px; font-weight: 700;
+  }
+  body.dark .highlighted { background-color: rgba(244, 63, 94, 0.2); }
+  .similar {
+    background-color: rgba(245, 158, 11, 0.15); color: var(--warning);
+    border-bottom: 2px dashed rgba(245, 158, 11, 0.4); border-radius: 4px; padding: 2px 6px; font-weight: 600;
+  }
+  .safe { color: var(--text-main); padding: 2px;}
+
+  /* ---------------- انیمیشن‌های پیشرفته ---------------- */
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes slideDownFade {
+    0% { opacity: 0; transform: translateY(-30px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes slideUpFloat {
+    0% { opacity: 0; transform: translateY(50px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulseGlow {
+    0% { filter: drop-shadow(0 0 5px rgba(79, 70, 229, 0.4)); transform: scale(0.95); }
+    100% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.8)); transform: scale(1.05); }
+  }
+  @keyframes scanPulse {
+    0% { top: 0; opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { top: calc(100% - 3px); opacity: 1; }
+  }
+  @keyframes blinkGlow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  @media (max-width: 992px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    .text-panel { flex-basis: 100%; height: 350px;}
+    .main-container { padding: 0 15px 50px; }
+    header { padding: 15px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <i class="fa-solid fa-fingerprint"></i>
+    <span>پژوهش‌یار پرو</span>
+  </div>
+  <div title="تغییر حالت تاریک/روشن" class="dark-toggle" id="darkModeToggle" role="button" tabindex="0">
+    <i class="fa-regular fa-moon"></i>
+  </div>
+</header>
+
+<div class="main-container">
+  <div class="page-title">
+    <h1>هوش مصنوعی تشخیص سرقت علمی</h1>
+    <p>متن‌های مرجع و مشکوک را وارد کرده یا فایل آپلود کنید. سیستم با الگوریتم‌های پیشرفته، مشابهت معنایی و ساختاری را بررسی می‌کند.</p>
+  </div>
+
+  <div class="controls-wrapper">
+    <button class="btn-outline" id="addFileBtn">
+      <i class="fa-solid fa-plus"></i> افزودن متن جدید
+    </button>
+    <div class="file-input-wrapper btn-outline">
+      <i class="fa-solid fa-file-upload"></i> آپلود فایل متنی
+      <input type="file" id="fileUploadInput" accept=".txt" multiple title="آپلود فایل متنی" />
+    </div>
+  </div>
+
+  <div class="multi-editor-grid" id="textPanelsContainer"></div>
+
+  <div class="action-section">
+    <button id="submitBtn" class="btn-primary" onclick="startAnalysis()">
+      <i class="fa-solid fa-microchip"></i> شروع تحلیل هوشمند
+    </button>
+
+    <div id="loader" class="loader-container">
+      <div class="scanner"><div class="scanner-line"></div></div>
+      <div id="loaderText" class="loader-text">در حال پردازش شبکه‌های عصبی...</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultContainer" class="result-container">
+    <div class="result-header">
+      <h2>نتایج ارزیابی هوشمند</h2>
+      <button id="downloadPdfBtn" class="btn-outline" onclick="downloadPDF()" style="margin: 15px auto 0;">
+        <i class="fa-solid fa-file-pdf"></i> دریافت گزارش PDF
+      </button>
+    </div>
+
+    <div class="scores-box" id="scoresBox">
+      <div class="score-item">
+        <span class="score-label">تشابه لغوی</span>
+        <span class="score-value" id="scoreLexical">0%</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">تشابه معنایی</span>
+        <span class="score-value" id="scoreSemantic">0%</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">ساختار جمله</span>
+        <span class="score-value" id="scoreStructure">0%</span>
+      </div>
+      <div class="score-item danger">
+        <span class="score-label">شاخص سرقت علمی</span>
+        <span class="score-value" id="scoreFinal">0%</span>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card" id="radarChartContainer">
+        <h3>تحلیل چندبعدی</h3>
+        <canvas id="radarChart"></canvas>
+      </div>
+      <div class="chart-card" id="similarityGraphContainer">
+        <h3>گراف ارتباط متون</h3>
+        <canvas id="graphCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="highlight-wrapper" style="display:flex; gap: 25px; flex-wrap: wrap;">
+      <div class="chart-card" style="flex:1 1 45%; min-width: 300px;">
+        <h3>متن مرجع (اصلی)</h3>
+        <div id="highlightRef" style="line-height: 2; margin-top: 15px;"></div>
+      </div>
+      <div class="chart-card" style="flex:1 1 45%; min-width: 300px;">
+        <h3>متن مشکوک بررسی شده</h3>
+        <div id="highlightSuspect" style="line-height: 2; margin-top: 15px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Dark Mode Toggle
+const darkModeToggle = document.getElementById("darkModeToggle");
+darkModeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  darkModeToggle.innerHTML = document.body.classList.contains("dark")
+    ? '<i class="fa-solid fa-sun"></i>'
+    : '<i class="fa-regular fa-moon"></i>';
+  if(radarChartInstance) updateChartTheme();
+});
+
+const textPanelsContainer = document.getElementById("textPanelsContainer");
+const addFileBtn = document.getElementById("addFileBtn");
+const fileUploadInput = document.getElementById("fileUploadInput");
+
+let panelCount = 0;
+let textContents = {};
+
+function createTextPanel(text = "", isReference = false) {
+  panelCount++;
+  const panelId = `panel${panelCount}`;
+  let panel = document.createElement("div");
+  panel.classList.add("text-panel");
+  panel.dataset.panelId = panelId;
+
+  const header = document.createElement("div");
+  header.className = "panel-header";
+
+  const titleWrap = document.createElement("div");
+  titleWrap.innerHTML = `<i class="${isReference ? 'fa-solid fa-shield-halved' : 'fa-solid fa-file-signature'}"></i>
+                         <span>${isReference ? "متن مرجع (پایه)" : `متن مشکوک #${panelCount - (isReference ? 0 : 1)}`}</span>`;
+  header.appendChild(titleWrap);
+
+  if (!isReference) {
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "action-btn-sm";
+    removeBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> بستن`;
+    removeBtn.addEventListener("click", () => {
+      delete textContents[panelId];
+      panel.style.transform = 'scale(0.9)';
+      panel.style.opacity = '0';
+      setTimeout(() => { panel.remove(); updateWordCountUI(); }, 300);
+    });
+    header.appendChild(removeBtn);
+  }
+
+  panel.appendChild(header);
+
+  const textarea = document.createElement("textarea");
+  textarea.placeholder = isReference ? "متن اصلی و معتبر را اینجا تایپ یا پیست کنید..." : "متن مقاله یا تحقیق مشکوک را اینجا وارد کنید...";
+  textarea.value = text;
+
+  textarea.addEventListener("input", () => {
+    textContents[panelId] = textarea.value;
+    updateWordCountUI();
+  });
+  panel.appendChild(textarea);
+
+  const footer = document.createElement("div");
+  footer.className = "panel-footer";
+
+  const wordCountSpan = document.createElement("span");
+  wordCountSpan.id = `${panelId}_wordCount`;
+  wordCountSpan.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-left:5px"></i> ۰ کلمه`;
+  footer.appendChild(wordCountSpan);
+
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "action-btn-sm";
+  clearBtn.innerHTML = `<i class="fa-solid fa-eraser"></i> پاک‌سازی`;
+  clearBtn.addEventListener("click", () => {
+    textarea.value = ""; textContents[panelId] = ""; updateWordCountUI();
+  });
+  footer.appendChild(clearBtn);
+
+  panel.appendChild(footer);
+  textPanelsContainer.appendChild(panel);
+  textContents[panelId] = text;
+  updateWordCountUI();
+}
+
+if(!Object.values(textContents).some(t => t?.length)){
+  createTextPanel("", true);
+  createTextPanel("");
+}
+
+addFileBtn.addEventListener("click", () => {
+  if (Object.keys(textContents).length >= 4) { alert("حداکثر 4 متن مجاز است"); return; }
+  createTextPanel();
+});
+
+fileUploadInput.addEventListener("change", async (e) => {
+  const files = e.target.files;
+  for(const file of files) {
+    if (file.type === "text/plain") {
+      let text = await file.text();
+      createTextPanel(text);
+    }
+  }
+  fileUploadInput.value = null;
+});
+
+function updateWordCountUI() {
+  Object.entries(textContents).forEach(([panelId, txt]) => {
+    let count = txt.trim() === "" ? 0 : txt.trim().split(/\s+/).length;
+    const wordCountSpan = document.getElementById(`${panelId}_wordCount`);
+    if (wordCountSpan) wordCountSpan.innerHTML = `<i class="fa-solid fa-chart-bar" style="margin-left:5px"></i> ${count} کلمه`;
+  });
+}
+
+let radarChartInstance = null;
+let currentScores = null;
+
+function updateChartTheme() {
+  if(!radarChartInstance || !currentScores) return;
+  updateScoresAndChart(currentScores);
+  drawSimilarityGraph(currentScores);
+}
+
+function updateScoresAndChart(scores) {
+  currentScores = scores;
+  const lexical = Number(scores.lexical);
+  const semantic = Number(scores.semantic);
+  const structure = Number(scores.structure);
+  const finalScore = ((lexical + semantic + structure) / 3).toFixed(1);
+
+  // Counter Animation
+  animateValue("scoreLexical", 0, lexical, 1000);
+  animateValue("scoreSemantic", 0, semantic, 1000);
+  animateValue("scoreStructure", 0, structure, 1000);
+  animateValue("scoreFinal", 0, finalScore, 1000);
+
+  const ctx = document.getElementById("radarChart").getContext("2d");
+  if (radarChartInstance) radarChartInstance.destroy();
+
+  const isDark = document.body.classList.contains('dark');
+  const textColor = isDark ? '#cbd5e1' : '#475569';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ["واژگان مشابه", "ارتباط معنایی", "ساختار نگارشی", "شاخص کل"],
+      datasets: [{
+        label: 'درصد تشابه',
+        data: [lexical, semantic, structure, finalScore],
+        fill: true,
+        backgroundColor: 'rgba(139, 92, 246, 0.3)',
+        borderColor: '#8b5cf6',
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#2563eb',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          angleLines: { color: gridColor },
+          grid: { color: gridColor },
+          pointLabels: { color: textColor, font: { family: 'Vazirmatn', size: 13, weight: 'bold' } },
+          min: 0, max: 100,
+          ticks: { display: false }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function animateValue(id, start, end, duration) {
+  const obj = document.getElementById(id);
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    obj.innerHTML = (progress * (end - start) + start).toFixed(1) + "%";
+    if (progress < 1) { window.requestAnimationFrame(step); }
+  };
+  window.requestAnimationFrame(step);
+}
+
+function drawSimilarityGraph(scores) {
+  const canvas = document.getElementById("graphCanvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.clientWidth * devicePixelRatio;
+  canvas.height = canvas.clientHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const centerX = canvas.clientWidth / 2;
+  const centerY = canvas.clientHeight / 2;
+  const radius = Math.min(centerX, centerY) - 50;
+
+  const nodes = [
+    { label: "منبع", x: centerX, y: centerY - radius, color: "#10b981" },
+    { label: "سند ۱", x: centerX - radius * 0.8, y: centerY + radius * 0.5, color: "#f59e0b" },
+    { label: "سند ۲", x: centerX + radius * 0.8, y: centerY + radius * 0.5, color: "#ef4444" },
+  ];
+
+  ctx.font = "bold 15px Vazirmatn";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  function drawEdge(n1, n2, similarity) {
+    ctx.beginPath();
+    ctx.moveTo(n1.x, n1.y);
+    ctx.lineTo(n2.x, n2.y);
+    const alpha = similarity / 100;
+    ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
+    ctx.lineWidth = 2 + (6 * alpha);
+    ctx.stroke();
+
+    // Draw text on line
+    const midX = (n1.x + n2.x)/2;
+    const midY = (n1.y + n2.y)/2;
+    ctx.fillStyle = document.body.classList.contains('dark') ? '#cbd5e1' : '#475569';
+    ctx.fillText(Math.round(similarity) + "%", midX, midY - 10);
+  }
+
+  drawEdge(nodes[0], nodes[1], scores.lexical);
+  drawEdge(nodes[0], nodes[2], scores.semantic);
+
+  nodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 25, 0, 2*Math.PI);
+    ctx.fillStyle = n.color;
+    ctx.shadowColor = n.color;
+    ctx.shadowBlur = 15;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "white";
+    ctx.fillText(n.label, n.x, n.y);
+  });
+}
+
+async function startAnalysis() {
+  const submitBtn = document.getElementById("submitBtn");
+  const loader = document.getElementById("loader");
+  const resultBox = document.getElementById("resultContainer");
+
+  const panels = Object.values(
+    document.querySelectorAll(".text-panel textarea")
+  );
+
+  if (
+    panels.length < 2 ||
+    !panels[0].value.trim() ||
+    !panels[1].value.trim()
+  ) {
+    alert("لطفاً حداقل یک متن مرجع و یک متن مشکوک وارد کنید.");
+    return;
+  }
+
+  // UI Start
+  submitBtn.disabled = true;
+  loader.style.display = "flex";
+  resultBox.style.display = "none";
+  submitBtn.style.opacity = "0.5";
+
+  const textRef = panels[0].value.trim();
+  const textSus = panels[1].value.trim();
+
+  // ارسال به سرور پایتون
+  const formData = new FormData();
+  formData.append("reference", textRef);
+  formData.append("suspect", textSus);
+
+  let response;
+  try {
+    response = await fetch("http://127.0.0.1:8000/analyze", {
+      method: "POST",
+      body: formData,
+    });
+  } catch (err) {
+    alert("اتصال به سرور برقرار نشد. مطمئن شو FastAPI اجرا شده باشد.");
+    loader.style.display = "none";
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = "1";
+    return;
+  }
+
+  const data = await response.json();
+  const scores = data.scores;
+  const highlightRef = data.highlight_ref;
+  const highlightSus = data.highlight_sus;
+
+  // نمایش هایلایت
+  document.getElementById("highlightRef").innerHTML = highlightRef;
+  document.getElementById("highlightSuspect").innerHTML = highlightSus;
+
+  // نمایش نتیجه
+  resultBox.style.display = "block";
+
+  // تاخیر برای آماده‌سازی canvas
+  setTimeout(() => {
+    updateScoresAndChart(scores);
+
+    const graphCanvas = document.getElementById("graphCanvas");
+    if (graphCanvas.clientWidth === 0) {
+      graphCanvas.style.width = "100%";
+      graphCanvas.style.height = "300px";
+    }
+
+    drawSimilarityGraph(scores);
+  }, 80);
+
+  // UI پایان
+  loader.style.display = "none";
+  submitBtn.disabled = false;
+  submitBtn.style.opacity = "1";
+  submitBtn.innerHTML =
+    '<i class="fa-solid fa-rotate-right"></i> تحلیل مجدد متون';
+
+  resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "pt", "a4");
+  pdf.setFont("Vazirmatn", "normal");
+  pdf.setFontSize(16);
+  pdf.text("گزارش هوشمند تشخیص سرقت علمی", 40, 50);
+  pdf.setFontSize(12);
+  pdf.text(`امتیاز کل: ${document.getElementById("scoreFinal").innerText}`, 40, 90);
+  pdf.text("متن بررسی شده:", 40, 130);
+  pdf.setFontSize(10);
+  pdf.setTextColor(100);
+  const text = document.getElementById("highlightSuspect").innerText.substring(0, 500) + "...";
+  pdf.text(text, 40, 150, { maxWidth: 500 });
+  pdf.save("plagiarism_report.pdf");
+}
+</script>
+</body>
+</html>
+<style>
+.hl-hit {
+  background-color: rgba(255, 196, 0, 0.35);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.hl-norm {
+  background: transparent;
+}
+
+</style>
