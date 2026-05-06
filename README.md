@@ -104,7 +104,7 @@ http://127.0.0.1:8000
 - Multi‑language support
 - Database integration
 
-## Author
+## 🧑🏻‍💻 Authors
 
 - Armin Abdollahi
 - Sarina Kasaiyan
