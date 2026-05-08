@@ -4,6 +4,16 @@ An intelligent system for detecting textual similarity and potential plagiarism 
 
 This project allows users to compare a reference text with multiple suspicious texts and receive detailed analytical results including similarity scores, highlighted overlaps, visual charts, and relationship graphs between documents.
 
+<p align="center">
+  <a href="images/PlagiarismDetector.jpeg">
+    <img src="https://github.com/user-attachments/assets/3e328ddf-904b-4e0a-831c-3047efe5a983" width="600">
+  </a>
+</p>
+
+
+<img width="2363" height="4164" alt="PlagiarismDetector" src="" />
+
+
 ## Features
 
 - Compare one reference text with multiple suspicious texts
