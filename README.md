@@ -10,10 +10,6 @@ This project allows users to compare a reference text with multiple suspicious t
   </a>
 </p>
 
-
-<img width="2363" height="4164" alt="PlagiarismDetector" src="" />
-
-
 ## Features
 
 - Compare one reference text with multiple suspicious texts
